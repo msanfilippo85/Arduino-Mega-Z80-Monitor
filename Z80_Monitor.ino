@@ -5,7 +5,7 @@
 #define RD_PIN 5
 #define WR_PIN 6
 #define IORQ_PIN 7
-//#define BSRQ_PIN 8
+#define RFSH_PIN 8
 
 const char ADDR_BUS[] = { 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52 };
 const char DATA_BUS[] = { 39, 41, 43, 45, 47, 49, 51, 53 };
@@ -26,6 +26,7 @@ void setup()
     pinMode(RD_PIN, INPUT);
     pinMode(WR_PIN, INPUT);
     pinMode(IORQ_PIN, INPUT);
+    pinMode(RFSH_PIN, INPUT);
 
     attachInterrupt(digitalPinToInterrupt(CLK_PIN), onClock, RISING);
 
@@ -54,7 +55,7 @@ void onClock()
     int pin_rd = digitalRead(RD_PIN) ? 0 : 1;
     int pin_wr = digitalRead(WR_PIN) ? 0 : 1;
     int pin_iorq = digitalRead(IORQ_PIN) ? 0 : 1;
-    //int pin_bs_req = digitalRead(BSRQ_PIN) ? 1 : 0;
+    int pin_rfsh = digitalRead(RFSH_PIN) ? 1 : 0;
     
     for(int n = 0; n < 8; n++)
     {
@@ -77,23 +78,19 @@ void onClock()
         data = (data << 1) + bit;
     }
 
-    char* m1_pin = pin_m1 ? "M1" : "  ";
-    char* mreq_pin = pin_mreq ? "MREQ" : "    ";
-    char* read_pin = pin_rd ? "READ" : "    ";
-    char* write_pin = pin_wr ? "WRITE" : "     ";
-
     sprintf(output,
-            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s",
+            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s|%s",
             addr_msb,
             addr_lsb,
             address_h,
             address_l,
             data_bits,
             data,
-            m1_pin,
-            mreq_pin,
-            read_pin,
-            write_pin);
+            pin_m1 ? "M1" : "  ",
+            pin_mreq ? "MREQ" : "    ",
+            pin_rfsh ? "RFSH" : "    ",
+            pin_rd ? "RD" : "  ",
+            pin_wr ? "WR" : "  ");
 
     Serial.println(output);
 }
