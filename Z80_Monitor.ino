@@ -1,42 +1,104 @@
-#define CLOCK 2
+#define CLK_PIN 2
 
-const char ADDR[] = { 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52 };
-const char DATA[] = { 39, 41, 43, 45, 47, 49, 51, 53 };
+#define M1_PIN 3
+#define MREQ_PIN 4
+#define RD_PIN 5
+#define WR_PIN 6
+#define IORQ_PIN 7
+//#define BSRQ_PIN 8
+
+const char ADDR_BUS[] = { 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52 };
+const char DATA_BUS[] = { 39, 41, 43, 45, 47, 49, 51, 53 };
 
 void setup()
 {
     for(int n = 0; n < 16; n++)
     {
-        pinMode(ADDR[n], INPUT);
+        pinMode(ADDR_BUS[n], INPUT);
     }
     for(int n = 0; n < 8; n++)
     {
-        pinMode(DATA[n], INPUT);
+        pinMode(DATA_BUS[n], INPUT);
     }
-    pinMode(CLOCK, INPUT);
+    pinMode(CLK_PIN, INPUT);
+    pinMode(M1_PIN, INPUT);
+    pinMode(MREQ_PIN, INPUT);
+    pinMode(RD_PIN, INPUT);
+    pinMode(WR_PIN, INPUT);
+    pinMode(IORQ_PIN, INPUT);
 
-    attachInterrupt(digitalPinToInterrupt(CLOCK), onClock, RISING);
+    attachInterrupt(digitalPinToInterrupt(CLK_PIN), onClock, RISING);
 
-    Serial.begin(57600);
+    Serial.begin(115200);
 }
 
 void onClock()
 {
-    for(int n = 0; n < 16; n++)
-    {
-        int bit = digitalRead(ADDR[n]) ? 1 : 0;
-        Serial.print(bit);
-    }
-    Serial.print("    ");
+    char output[80];
+
+    unsigned int address_l = 0;
+    unsigned int address_h = 0;
+    unsigned int data = 0;
+
+    char addr_lsb[9];
+    char addr_msb[9];
+    char data_bits[9];
+
+    addr_lsb[8] = '\0';
+    addr_msb[8] = '\0';
+    data_bits[8] = '\0';
+
+    // The pins are all ACTIVE LOW
+    int pin_m1 = digitalRead(M1_PIN) ? 0 : 1;
+    int pin_mreq = digitalRead(MREQ_PIN) ? 0 : 1;
+    int pin_rd = digitalRead(RD_PIN) ? 0 : 1;
+    int pin_wr = digitalRead(WR_PIN) ? 0 : 1;
+    int pin_iorq = digitalRead(IORQ_PIN) ? 0 : 1;
+    //int pin_bs_req = digitalRead(BSRQ_PIN) ? 1 : 0;
+    
     for(int n = 0; n < 8; n++)
     {
-        int bit = digitalRead(DATA[n]) ? 1 : 0;
-        Serial.print(bit);
+        int bit = digitalRead(ADDR_BUS[n]) ? 1 : 0;
+        addr_msb[n] = bit ? '1' : '0';
+        address_h = (address_h << 1) + bit;
     }
-    Serial.println();
+    
+    for(int n = 8; n < 16; n++)
+    {
+        int bit = digitalRead(ADDR_BUS[n]) ? 1 : 0;
+        addr_lsb[n-8] = bit ? '1' : '0';
+        address_l = (address_l << 1) + bit;
+    }
+
+    for(int n = 0; n < 8; n++)
+    {
+        int bit = digitalRead(DATA_BUS[n]) ? 1 : 0;
+        data_bits[n] = bit ? '1' : '0';
+        data = (data << 1) + bit;
+    }
+
+    char* m1_pin = pin_m1 ? "M1" : "  ";
+    char* mreq_pin = pin_mreq ? "MREQ" : "    ";
+    char* read_pin = pin_rd ? "READ" : "    ";
+    char* write_pin = pin_wr ? "WRITE" : "     ";
+
+    sprintf(output,
+            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s",
+            addr_msb,
+            addr_lsb,
+            address_h,
+            address_l,
+            data_bits,
+            data,
+            m1_pin,
+            mreq_pin,
+            read_pin,
+            write_pin);
+
+    Serial.println(output);
 }
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
+    // put your main code here, to run repeatedly:
 }
