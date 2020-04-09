@@ -55,7 +55,7 @@ void onClock()
     int pin_rd = digitalRead(RD_PIN) ? 0 : 1;
     int pin_wr = digitalRead(WR_PIN) ? 0 : 1;
     int pin_iorq = digitalRead(IORQ_PIN) ? 0 : 1;
-    int pin_rfsh = digitalRead(RFSH_PIN) ? 1 : 0;
+    int pin_rfsh = digitalRead(RFSH_PIN) ? 0 : 1;
     
     for(int n = 0; n < 8; n++)
     {
@@ -79,7 +79,7 @@ void onClock()
     }
 
     sprintf(output,
-            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s|%s",
+            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s|%s|%s",
             addr_msb,
             addr_lsb,
             address_h,
@@ -90,12 +90,10 @@ void onClock()
             pin_mreq ? "MREQ" : "    ",
             pin_rfsh ? "RFSH" : "    ",
             pin_rd ? "RD" : "  ",
-            pin_wr ? "WR" : "  ");
+            pin_wr ? "WR" : "  ",
+            pin_iorq ? "IORQ" : "    ");
 
     Serial.println(output);
 }
 
-void loop()
-{
-    // put your main code here, to run repeatedly:
-}
+void loop() { }
