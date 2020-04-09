@@ -3,5 +3,5 @@
     "board": "arduino:avr:mega",
     "configuration": "cpu=atmega2560",
     "port": "COM4",
-    "sketch": "Z80_Monitor.ino"
+    "sketch": "Z80_Monitor\\Z80_Monitor.ino"
 }
