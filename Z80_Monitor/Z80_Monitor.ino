@@ -8,7 +8,8 @@
 #define RFSH_PIN 8
 
 const char ADDR_BUS[] = { 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52 };
-const char DATA_BUS[] = { 39, 41, 43, 45, 47, 49, 51, 53 };
+// pin mapping:           D7, D6, D5, D4, D3, D2, D1, D0
+const char DATA_BUS[] = { 43, 47, 49, 53, 51, 45, 39, 41 };
 
 void setup()
 {
@@ -41,13 +42,9 @@ void onClock()
     unsigned int address_h = 0;
     unsigned int data = 0;
 
-    char addr_lsb[9];
-    char addr_msb[9];
-    char data_bits[9];
-
-    addr_lsb[8] = '\0';
-    addr_msb[8] = '\0';
-    data_bits[8] = '\0';
+    char addr_lsb[9] = "        ";
+    char addr_msb[9] = "        ";
+    char data_bits[9] = "        ";
 
     // The pins are all ACTIVE LOW
     int pin_m1 = digitalRead(M1_PIN) ? 0 : 1;
@@ -61,6 +58,10 @@ void onClock()
     {
         int bit = digitalRead(ADDR_BUS[n]) ? 1 : 0;
         addr_msb[n] = bit ? '1' : '0';
+        if(pin_rfsh)
+        {
+            addr_msb[n] = ' ';
+        }
         address_h = (address_h << 1) + bit;
     }
     
@@ -68,6 +69,10 @@ void onClock()
     {
         int bit = digitalRead(ADDR_BUS[n]) ? 1 : 0;
         addr_lsb[n-8] = bit ? '1' : '0';
+        if(pin_rfsh && n == 8)
+        {
+            addr_lsb[n-8] = ' ';
+        }
         address_l = (address_l << 1) + bit;
     }
 
@@ -78,21 +83,41 @@ void onClock()
         data = (data << 1) + bit;
     }
 
-    sprintf(output,
-            "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s|%s|%s",
-            addr_msb,
-            addr_lsb,
-            address_h,
-            address_l,
-            data_bits,
-            data,
-            pin_m1 ? "M1" : "  ",
-            pin_mreq ? "MREQ" : "    ",
-            pin_rfsh ? "RFSH" : "    ",
-            pin_rd ? "RD" : "  ",
-            pin_wr ? "WR" : "  ",
-            pin_iorq ? "IORQ" : "    ");
-
+    if(!pin_rfsh)
+    {
+        sprintf(output,
+                "%s %s (%02X %02X)    %s (%02X)    %s|%s|%s|%s|%s|%s",
+                addr_msb,
+                addr_lsb,
+                address_h,
+                address_l,
+                data_bits,
+                data,
+                pin_m1 ? "M1" : "  ",
+                pin_mreq ? "MREQ" : "    ",
+                "    ",
+                pin_rd ? "RD" : "  ",
+                pin_wr ? "WR" : "  ",
+                pin_iorq ? "IORQ" : "    ");
+    }
+    else
+    {
+        sprintf(output,
+                "%s %s (    %1X)    %s (%02X)    %s|%s|%s|%s|%s|%s",
+                addr_msb,
+                addr_lsb,
+                //address_h,
+                address_l & 15,
+                data_bits,
+                data,
+                pin_m1 ? "M1" : "  ",
+                pin_mreq ? "MREQ" : "    ",
+                "RFSH",
+                pin_rd ? "RD" : "  ",
+                pin_wr ? "WR" : "  ",
+                pin_iorq ? "IORQ" : "    ");
+    }
+    
     Serial.println(output);
 }
 
