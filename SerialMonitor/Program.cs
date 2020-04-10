@@ -21,9 +21,17 @@ namespace Z80SerialMonitor
                 .WithParsed((opts) => { options = opts; })
                 .WithNotParsed(HandleParseError);
 
+            bool stop = false;
+
+            Console.CancelKeyPress += (object sender, ConsoleCancelEventArgs e) => {
+                stop = true;
+                RestoreColors();
+                e.Cancel = true;
+            };
+
+            SaveCurrentColors();
             try
             {
-                bool stop = false;
                 using(var serialPort = new SerialPort(options.Port, options.Speed.Value))
                 {
                     serialPort.ReadTimeout = 1500;
@@ -37,6 +45,11 @@ namespace Z80SerialMonitor
                             writeMessage(message);
                         }
                         catch (TimeoutException) { }
+                        // In the future, maybe, I would add a method to pause reading from the serial port 
+                        // if(Console.KeyAvailable)
+                        // {
+                        // // In the meantime, [Ctrl]+[C] should suffice
+                        // }
                     }
                     serialPort.Close();
                 }

@@ -4,12 +4,25 @@ namespace Z80SerialMonitor
 {
     public static class ConsoleExtension
     {
-        public static void WriteColor(string val, ConsoleColor? foreground = null, ConsoleColor? background = null)
+        static ConsoleColor currentForeground;
+        static ConsoleColor currentBackground;
+
+        public static void SaveCurrentColors()
         {
             // Save current colors (hope they are the default ones)
-            ConsoleColor currentForeground = Console.ForegroundColor;
-            ConsoleColor currentBackground = Console.BackgroundColor;
+            currentForeground = Console.ForegroundColor;
+            currentBackground = Console.BackgroundColor;
+        }
 
+        public static void RestoreColors()
+        {
+            // Restore previoulsy saved colors
+            Console.ForegroundColor = currentForeground;
+            Console.BackgroundColor = currentBackground;
+        }
+
+        public static void WriteColor(string val, ConsoleColor? foreground = null, ConsoleColor? background = null)
+        {
             if(foreground.HasValue)
             {
                 Console.ForegroundColor = foreground.Value;
@@ -19,15 +32,13 @@ namespace Z80SerialMonitor
                 Console.BackgroundColor = background.Value;
             }
             Console.Write(val);
-
-            // Restore previoulsy saved colors
-            Console.ForegroundColor = currentForeground;
-            Console.BackgroundColor = currentBackground;
+            RestoreColors();
         }
 
         public static void WriteLineColor(string val, ConsoleColor? foreground = null, ConsoleColor? background = null)
         {
-            WriteColor($"{val}\n", foreground, background);
+            WriteColor(val, foreground, background);
+            Console.Write("\n");
         }
     }
 }
